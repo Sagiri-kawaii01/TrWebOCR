@@ -20,7 +20,7 @@ LIB_ONNX = 'libonnxruntime.so.1.3.0'
 
 TR_GPU_PATH = os.path.join(BASE_PATH, "tr_gpu")
 TR_CPU_PATH = os.path.join(BASE_PATH, "tr_cpu")
-TR_PATH = os.path.join(BASE_PATH, "tr")
+TR_PATH = os.path.join(BASE_PATH, "tr1")
 
 
 def calc_sha256(filname):

@@ -180,7 +180,7 @@ export default {
 
       const _this = this
       axios({
-        // url: '/api/tr-run/',
+        // url: '/api/tr1-run/',
         url: '/api/tr-run/',
         method: 'post',
         headers: {

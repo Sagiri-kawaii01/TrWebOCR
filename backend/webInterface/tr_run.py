@@ -6,7 +6,8 @@
 import time
 import cv2
 import numpy as np
-from backend.tr import tr
+from backend.tr1 import tr1
+import tr as tr2
 import tornado.web
 import tornado.gen
 import tornado.httpserver
@@ -22,10 +23,41 @@ import logging
 
 logger = logging.getLogger(log.LOGGER_ROOT_NAME + '.' + __name__)
 
+def file_to_numpy(file):
+    with BytesIO() as byte_io:
+        byte_io.write(file['body'])  # 将文件对象的内容写入到BytesIO对象中
+        byte_io.seek(0)  # 将文件指针移动到文件的开头
+        byte_data = byte_io.read()  # 读取字节数据
+        image_np = np.frombuffer(byte_data, dtype=np.uint8)
+        image_np2 = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+        return cv2.cvtColor(image_np2, cv2.COLOR_BGR2GRAY)
+
+def base64_to_numpy(image_base64):
+    image_bytes = base64.b64decode(image_base64)
+    image_np = np.frombuffer(image_bytes, dtype=np.uint8)
+    image_np2 = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    return cv2.cvtColor(image_np2, cv2.COLOR_BGR2GRAY)
+
+class TrRunV2(tornado.web.RequestHandler):
+
+    crnn = tr2.CRNN()
+
+    def get(self):
+        self.set_status(404)
+        self.write("404 : Please use POST")
+
+    @tornado.gen.coroutine
+    def post(self):
+        img_up = self.request.files.get('file', None)
+        img_b64 = self.get_argument('img', None)
+        self.set_header('content-type', 'application/json')
+        narray = file_to_numpy(img_up[0]) if img_up != None else base64_to_numpy(img_b64)
+        chars, scores = self.crnn.run(narray)
+        self.finish(json.dumps({'code': 200, 'msg': 'ok', 'data': "".join(chars)}, cls=NpEncoder))
 
 class TrRun(tornado.web.RequestHandler):
     '''
-    使用 tr 的 run 方法
+    使用 tr1 的 run 方法
     '''
 
     def get(self):
@@ -112,7 +144,7 @@ class TrRun(tornado.web.RequestHandler):
             img = img.resize((new_width, new_height), Image.ANTIALIAS)
 
         # 进行ocr
-        res = tr.run(img.copy().convert("L"), flag=tr.FLAG_ROTATED_RECT)
+        res = tr1.run(img.copy().convert("L"), flag=tr1.FLAG_ROTATED_RECT)
 
         response_data = {'code': 200, 'msg': '成功',
                          'data': {'raw_out': res,
