@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 import datetime
 import json
+import urllib.parse
 
 from backend.tools.np_encoder import NpEncoder
 from backend.tools import log
@@ -33,7 +34,7 @@ def file_to_numpy(file):
         return cv2.cvtColor(image_np2, cv2.COLOR_BGR2GRAY)
 
 def base64_to_numpy(image_base64):
-    image_bytes = base64.b64decode(image_base64)
+    image_bytes = base64.b64decode(urllib.parse.unquote(image_base64))
     image_np = np.frombuffer(image_bytes, dtype=np.uint8)
     image_np2 = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
     return cv2.cvtColor(image_np2, cv2.COLOR_BGR2GRAY)
@@ -90,7 +91,7 @@ class TrRun(tornado.web.RequestHandler):
             up_image_name = img_up.filename
             img = Image.open(BytesIO(img_up.body))
         elif img_b64 is not None:
-            raw_image = base64.b64decode(img_b64.encode('utf8'))
+            raw_image = base64.b64decode(urllib.parse.unquote(img_b64).encode('utf8'))
             img = Image.open(BytesIO(raw_image))
         else:
             self.set_status(400)
